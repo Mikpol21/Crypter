@@ -22,6 +22,17 @@
   (major1) == 4 && (major2) == 12 && (minor) <= 0)
 #endif /* MIN_VERSION_base */
 
+/* package bytestring-0.10.8.2 */
+#ifndef VERSION_bytestring
+#define VERSION_bytestring "0.10.8.2"
+#endif /* VERSION_bytestring */
+#ifndef MIN_VERSION_bytestring
+#define MIN_VERSION_bytestring(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  10 || \
+  (major1) == 0 && (major2) == 10 && (minor) <= 8)
+#endif /* MIN_VERSION_bytestring */
+
 /* package cryptonite-0.29 */
 #ifndef VERSION_cryptonite
 #define VERSION_cryptonite "0.29"
@@ -32,6 +43,17 @@
   (major1) == 0 && (major2) <  29 || \
   (major1) == 0 && (major2) == 29 && (minor) <= 0)
 #endif /* MIN_VERSION_cryptonite */
+
+/* package memory-0.17.0 */
+#ifndef VERSION_memory
+#define VERSION_memory "0.17.0"
+#endif /* VERSION_memory */
+#ifndef MIN_VERSION_memory
+#define MIN_VERSION_memory(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  17 || \
+  (major1) == 0 && (major2) == 17 && (minor) <= 0)
+#endif /* MIN_VERSION_memory */
 
 /* tool gcc-9 */
 #ifndef TOOL_VERSION_gcc
