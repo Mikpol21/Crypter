@@ -36,4 +36,4 @@ decrypt key msg = do
 
 encryptIO, decryptIO :: ByteString -> ByteString -> IO ByteString
 encryptIO key = throwCryptoErrorIO . encrypt key
-decryptIO key = decrypt key >>> throwCryptoErrorIO >>> fmap (fromMaybe "error occured")
+decryptIO key = decrypt key >>> throwCryptoErrorIO >>> fmap (fromMaybe "Error occured in unpadding")
