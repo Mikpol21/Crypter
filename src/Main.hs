@@ -6,23 +6,6 @@ import System.Environment (getArgs)
 import System.Directory
 import System.IO
 
-modes, reserved :: [String]
-modes = ["-e", "-d", "-cat"]
-reserved = modes ++ ["-r"]
-
-errorOn :: Bool -> String -> IO ()
-errorOn t msg = if t then ioError (userError ("[Crypter Error]" ++ msg)) else pure ()
-
-printE :: Int -> String -> IO ()
-printE n msg = putStrLn $ "[Crypter] " ++ (concat . take n $ repeat "\t") ++ msg
-
-printC :: String -> IO ()
-printC msg = putStrLn $ "[Crypter] " ++ msg
-
-data Mode = ENCRYPT | DECRYPT | CAT
-type Key = BS.ByteString
-
-
 main :: IO ()
 main = do
     (files, mode) <- getFilesAndMode
@@ -30,10 +13,7 @@ main = do
     mapM printC files
     mapM_ (modeToOperation mode key) files 
 
-modeToOperation :: Mode -> Key -> FilePath -> IO ()
-modeToOperation ENCRYPT = encryptFile
-modeToOperation DECRYPT = decryptFile
-modeToOperation CAT = cat
+--------------------------------------------------------------------
 
 encryptFile, decryptFile, cat :: Key -> FilePath -> IO ()
 encryptFile key filePath =
@@ -63,7 +43,9 @@ cat key filePath =
         file <- BS.readFile filePath
         decrypted <- C.decryptIO key file
         BS.putStrLn decrypted
-    
+
+--------------------------------------------------------------------
+
 getAll :: FilePath -> IO [FilePath]
 getAll path = do
     isDir <- doesDirectoryExist path
@@ -100,6 +82,7 @@ getFilesAndMode = do
     errorOn (files == []) "Please provide file(s) name"
     return (workFiles, mode)
 
+
 getMode :: [String] -> IO Mode
 getMode args = do
     let flags = filter (\w -> w `elem` modes) args
@@ -110,6 +93,14 @@ getMode args = do
         "-d"     -> DECRYPT
         "-cat"   -> CAT
 
+
+modeToOperation :: Mode -> Key -> FilePath -> IO ()
+modeToOperation ENCRYPT = encryptFile
+modeToOperation DECRYPT = decryptFile
+modeToOperation CAT = cat
+
+--------------------------------------------------------------------
+
 isEncrypted :: FilePath -> Bool
 isEncrypted path = drop (length path - len) path == ".encrypted"
     where len = length (".encrypted" :: String)
@@ -117,3 +108,19 @@ isEncrypted path = drop (length path - len) path == ".encrypted"
 cutEncrypted :: FilePath -> FilePath
 cutEncrypted path = take (length path - len) path
     where len = length (".encrypted" :: String)
+
+modes, reserved :: [String]
+modes = ["-e", "-d", "-cat"]
+reserved = modes ++ ["-r"]
+
+errorOn :: Bool -> String -> IO ()
+errorOn t msg = if t then ioError (userError ("[Crypter Error]" ++ msg)) else pure ()
+
+printE :: Int -> String -> IO ()
+printE n msg = putStrLn $ "[Crypter] " ++ (concat . take n $ repeat "\t") ++ msg
+
+printC :: String -> IO ()
+printC msg = putStrLn $ "[Crypter] " ++ msg
+
+data Mode = ENCRYPT | DECRYPT | CAT
+type Key = BS.ByteString
