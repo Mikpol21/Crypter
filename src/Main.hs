@@ -10,12 +10,13 @@ main :: IO ()
 main = do
     (files, mode) <- getFilesAndMode
     key <- getKey
-    mapM printC files
+    displayWorkingFiles files
     mapM_ (modeToOperation mode key) files 
+    printC "Done!"
 
 --------------------------------------------------------------------
 
-encryptFile, decryptFile, cat :: Key -> FilePath -> IO ()
+encryptFile, decryptFile, catFile :: Key -> FilePath -> IO ()
 encryptFile key filePath =
     if isEncrypted filePath then printC $ "Ignoring " ++ filePath ++ ", it is already encrypted"
     else do
@@ -36,22 +37,29 @@ decryptFile key filePath =
         -- removeFile (".config-" ++ filePath)
         removeFile filePath
 
-cat key filePath = 
+catFile key filePath = 
     if not (isEncrypted filePath) then printC $ "Ignoring " ++ filePath ++ ", it is not encrypted"
     else do
         printC $ "Showing " ++  cutEncrypted filePath
         file <- BS.readFile filePath
         decrypted <- C.decryptIO key file
         BS.putStrLn decrypted
+        printC $ "End of " ++ cutEncrypted filePath
+        printC ""
 
 --------------------------------------------------------------------
+
+displayWorkingFiles :: [FilePath] -> IO ()
+displayWorkingFiles files = do
+    printC "Working on:"
+    mapM (printE 1) files
+    printC ""
 
 getAll :: FilePath -> IO [FilePath]
 getAll path = do
     isDir <- doesDirectoryExist path
     if isDir
         then do
-            printC $ "Recursively on " ++ path
             contents <- listDirectory path
             subResults <- mapM getAll $ map ((path ++ "/") ++ ) contents
             return $ fmap concat subResults
@@ -60,13 +68,15 @@ getAll path = do
 
 getKey :: IO Key
 getKey = do
-    printC "Please provide the key"
+    printC ""
+    printC "Please provide the key:"
     hSetEcho stdin False
     key1 <- BS.getLine
     errorOn (BS.length key1 > 32) "Please provide key of length at most 32 characters"
     printC "Please provide the again"
     key2 <- BS.getLine
     errorOn (key1 /= key2) "Keys differ"
+    printC ""
     return key1
 
 
@@ -86,18 +96,18 @@ getFilesAndMode = do
 getMode :: [String] -> IO Mode
 getMode args = do
     let flags = filter (\w -> w `elem` modes) args
-    errorOn (flags == []) "Please specify a mode (d, e, cat)"
+    errorOn (flags == []) "Please specify a mode (d, e, catFile)"
     errorOn (length flags > 1) "Please specify a mode only once"
     pure $ case head flags of
         "-e"     -> ENCRYPT
         "-d"     -> DECRYPT
-        "-cat"   -> CAT
+        "-c"     -> CAT
 
 
 modeToOperation :: Mode -> Key -> FilePath -> IO ()
 modeToOperation ENCRYPT = encryptFile
 modeToOperation DECRYPT = decryptFile
-modeToOperation CAT = cat
+modeToOperation CAT = catFile
 
 --------------------------------------------------------------------
 
@@ -110,17 +120,17 @@ cutEncrypted path = take (length path - len) path
     where len = length (".encrypted" :: String)
 
 modes, reserved :: [String]
-modes = ["-e", "-d", "-cat"]
+modes = ["-e", "-d", "-c"]
 reserved = modes ++ ["-r"]
 
 errorOn :: Bool -> String -> IO ()
-errorOn t msg = if t then ioError (userError ("[Crypter Error]" ++ msg)) else pure ()
+errorOn t msg = if t then ioError (userError ("\ESC[95m[Crypter Error]\ESC[0m" ++ msg)) else pure ()
 
 printE :: Int -> String -> IO ()
-printE n msg = putStrLn $ "[Crypter] " ++ (concat . take n $ repeat "\t") ++ msg
+printE n msg = putStrLn $ "\ESC[91m[Crypter]\ESC[0m " ++ (concat . take n $ repeat "\t") ++ msg
 
 printC :: String -> IO ()
-printC msg = putStrLn $ "[Crypter] " ++ msg
+printC msg = printE 0 msg
 
 data Mode = ENCRYPT | DECRYPT | CAT
 type Key = BS.ByteString
