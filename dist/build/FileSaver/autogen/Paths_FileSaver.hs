@@ -29,12 +29,12 @@ version :: Version
 version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
-bindir     = "/home/mikpol/.cabal/bin"
-libdir     = "/home/mikpol/.cabal/lib/x86_64-linux-ghc-8.6.5/FileSaver-0.1.0.0-KhH3pAccFhLCOgfYj4wrxt-FileSaver"
-dynlibdir  = "/home/mikpol/.cabal/lib/x86_64-linux-ghc-8.6.5"
-datadir    = "/home/mikpol/.cabal/share/x86_64-linux-ghc-8.6.5/FileSaver-0.1.0.0"
-libexecdir = "/home/mikpol/.cabal/libexec/x86_64-linux-ghc-8.6.5/FileSaver-0.1.0.0"
-sysconfdir = "/home/mikpol/.cabal/etc"
+bindir     = "/home/mikoaj/.cabal/bin"
+libdir     = "/home/mikoaj/.cabal/lib/x86_64-linux-ghc-8.6.5/FileSaver-0.1.0.0-KhH3pAccFhLCOgfYj4wrxt"
+dynlibdir  = "/home/mikoaj/.cabal/lib/x86_64-linux-ghc-8.6.5"
+datadir    = "/home/mikoaj/.cabal/share/x86_64-linux-ghc-8.6.5/FileSaver-0.1.0.0"
+libexecdir = "/home/mikoaj/.cabal/libexec/x86_64-linux-ghc-8.6.5/FileSaver-0.1.0.0"
+sysconfdir = "/home/mikoaj/.cabal/etc"
 
 getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: IO FilePath
 getBinDir = catchIO (getEnv "FileSaver_bindir") (\_ -> return bindir)

@@ -24,6 +24,7 @@ executable FileSaver
     cryptonite >= 0.29,
     bytestring,
     memory,
-    directory
+    directory,
+    list-transformer
   hs-source-dirs:      src
   default-language:    Haskell2010

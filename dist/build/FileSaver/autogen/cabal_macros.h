@@ -55,6 +55,17 @@
   (major1) == 1 && (major2) == 3 && (minor) <= 3)
 #endif /* MIN_VERSION_directory */
 
+/* package list-transformer-1.0.7 */
+#ifndef VERSION_list_transformer
+#define VERSION_list_transformer "1.0.7"
+#endif /* VERSION_list_transformer */
+#ifndef MIN_VERSION_list_transformer
+#define MIN_VERSION_list_transformer(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  0 || \
+  (major1) == 1 && (major2) == 0 && (minor) <= 7)
+#endif /* MIN_VERSION_list_transformer */
+
 /* package memory-0.16.0 */
 #ifndef VERSION_memory
 #define VERSION_memory "0.16.0"
