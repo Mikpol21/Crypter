@@ -1,2 +1,2 @@
 #FileSaver
-Small app which encrypts and decrypts your files
+Small app for encrypting files

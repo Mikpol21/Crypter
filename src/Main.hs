@@ -115,5 +115,5 @@ isEncrypted path = drop (length path - len) path == ".encrypted"
     where len = length (".encrypted" :: String)
 
 cutEncrypted :: FilePath -> FilePath
-cutEncrypted path = drop (length path - len) path
+cutEncrypted path = take (length path - len) path
     where len = length (".encrypted" :: String)
