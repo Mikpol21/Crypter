@@ -18,7 +18,7 @@ import Data.Maybe
 import Util
 import System.Directory
 import System.IO
-import Data.ByteString.Char8 (putStrLn)
+import Data.ByteString.Char8 (putStr)
 import EncryptedFile
 import Data.ByteArray (unpack)
 
@@ -89,7 +89,7 @@ catFile passwd filePath = do
         encryptedFile <- readEncryptedFile filePath
         let key = deriveKey passwd $ getSalt encryptedFile
         decrypted <- decryptIO key $ getContent encryptedFile
-        Data.ByteString.Char8.putStrLn decrypted
+        Data.ByteString.Char8.putStr decrypted
 
 
 
