@@ -1,6 +1,6 @@
 # Crypter
-Small app encrypting your sensitive files
-## Usage
+## Encrypting your confidential files
+### Usage
 ```
 Usage: ./Crypter flags files
 Flags: 
@@ -10,7 +10,7 @@ Flags:
     -r -> work recursively on directories
     -h -> guide
 ```
-## Details
+### Details
 Encrypting files using AES256 together with a key derivation function PBKDF2
-## Example usage
+### Example usage
 ![Example usage](Demonstration/Example.png)
