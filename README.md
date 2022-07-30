@@ -16,8 +16,8 @@ Flags:
 Getting crypter requires cabal, which can be installed using command
 ``` brew install cabal-install ```
 . Having done that run
-```cabal build ```
-and you will find an executable in `dist/build/Crypter/Crypter`
+```cabal build```
+ and you will find an executable in `dist/build/Crypter/Crypter`
 ### Details
 Encrypting files using AES256 together with a key derivation function PBKDF2
 ### Disclaimer
