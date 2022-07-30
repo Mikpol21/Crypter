@@ -54,42 +54,38 @@ decryptIO key = decrypt key >>> throwCryptoErrorIO >>> fmap (fromMaybe "Error oc
 
 encryptFile, decryptFile, catFile :: ByteString -> FilePath -> IO ()
 
-encryptFile passwd filePath =
-    if isEncrypted filePath then printC $ "Ignoring " ++ filePath ++ ", it is already encrypted"
-    else do
-        printC $ "Encrypting " ++ filePath
-        salt <- generateSalt
-        let key = deriveKey passwd salt
-        let hashedKey = tiger key
+encryptFile passwd filePath = do -- TODO do not encrypt already encrypted files
+    printC $ "Encrypting " ++ filePath
+    salt <- generateSalt
+    let key = deriveKey passwd salt
+    let hashedKey = tiger key
 
-        file <- BS.readFile filePath
-        content <- encryptIO key file
-        let encryptedFile = toFile salt hashedKey content
-        
-        writeEncryptedFile (filePath ++ ".encrypted") encryptedFile
+    file <- BS.readFile filePath
+    content <- encryptIO key file
+    let encryptedFile = toFile salt hashedKey content
+    
+    writeEncryptedFile (filePath ++ ".encrypted") encryptedFile
+    removeFile filePath
+    renameFile (filePath ++ ".encrypted") filePath
+
+decryptFile passwd filePath = do -- TODO Handle parser errors
+    printC $ "Decrypting " ++ filePath
+    encryptedFile <- readEncryptedFile filePath
+    let key = deriveKey passwd $ getSalt encryptedFile
+    passed <- safetyCheck (getHash encryptedFile) key filePath
+    if passed then do
+        decryptedContents <- decryptIO key $ getContent encryptedFile
+        BS.writeFile (filePath ++ ".decrypted") decryptedContents
         removeFile filePath
-        renameFile (filePath ++ ".encrypted") filePath
-
-    -- BS.writeFile (".config-" ++ filePath) key
-
-decryptFile passwd filePath = do
-        printC $ "Decrypting " ++ filePath
-        encryptedFile <- readEncryptedFile filePath
-        let key = deriveKey passwd $ getSalt encryptedFile
-        passed <- safetyCheck (getHash encryptedFile) key filePath
-        if passed then do
-            decryptedContents <- decryptIO key $ getContent encryptedFile
-            BS.writeFile (filePath ++ ".decrypted") decryptedContents
-            removeFile filePath
-            renameFile (filePath ++ ".decrypted") filePath
-        else pure ()
+        renameFile (filePath ++ ".decrypted") filePath
+    else pure ()
 
 catFile passwd filePath = do
-        printC $ "Showing " ++  filePath
-        encryptedFile <- readEncryptedFile filePath
-        let key = deriveKey passwd $ getSalt encryptedFile
-        decrypted <- decryptIO key $ getContent encryptedFile
-        Data.ByteString.Char8.putStr decrypted
+    printC $ "Showing " ++  filePath
+    encryptedFile <- readEncryptedFile filePath
+    let key = deriveKey passwd $ getSalt encryptedFile
+    decrypted <- decryptIO key $ getContent encryptedFile
+    Data.ByteString.Char8.putStr decrypted
 
 
 
@@ -104,7 +100,6 @@ getPassword = do
     printC "Please provide password:"
     hSetEcho stdin False
     password1 <- BS.getLine
-    -- errorOn (BS.length key1 > 32) "Please provide key of length at most 32 characters"
     printC "Please provide password again"
     password2 <- BS.getLine
     hSetEcho stdin True
