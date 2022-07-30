@@ -5,7 +5,10 @@ module Crypter where
 
 import Crypto.Cipher.AES
 import Crypto.Error
+import Crypto.Random
 import Crypto.KDF.PBKDF2
+import Crypto.Hash
+import Crypto.Hash.Algorithms
 import Crypto.Cipher.Types (BlockCipher(..), Cipher(..), nullIV, KeySizeSpecifier(..), IV, makeIV)
 import Data.ByteArray (ByteArray)
 import qualified Crypto.Random.Types as CRT
@@ -17,12 +20,14 @@ import Util
 import System.Directory
 import System.IO
 import Data.ByteString.Char8 (putStrLn)
+import EncryptedFile
+import Data.ByteArray (unpack)
 
 type ByteString = BS.ByteString
 
 
-deriveKey :: ByteString -> ByteString
-deriveKey password = fastPBKDF2_SHA256 (Parameters 4000 32) password ("1234567890" :: ByteString)
+deriveKey :: ByteString -> ByteString -> ByteString
+deriveKey password salt = fastPBKDF2_SHA256 (Parameters 4000 32) password salt
 
 getCipher :: ByteString -> CryptoFailable AES256
 getCipher = cipherInit 
@@ -40,40 +45,51 @@ decrypt key msg = do
     return $ unpad (PKCS7 16) decrypted
 
 
+tiger :: ByteString -> ByteString
+tiger bs =  BS.pack . Data.ByteArray.unpack $ (hash bs :: Digest Tiger)
 
 encryptIO, decryptIO :: ByteString -> ByteString -> IO ByteString
 encryptIO key = throwCryptoErrorIO . encrypt key
 decryptIO key = decrypt key >>> throwCryptoErrorIO >>> fmap (fromMaybe "Error occured in unpadding")
 
 
-encryptFile, decryptFile, catFile :: Key -> FilePath -> IO ()
+encryptFile, decryptFile, catFile :: ByteString -> FilePath -> IO ()
 
-encryptFile key filePath =
+encryptFile passwd filePath =
     if isEncrypted filePath then printC $ "Ignoring " ++ filePath ++ ", it is already encrypted"
     else do
         printC $ "Encrypting " ++ filePath
+        salt <- generateSalt
+        let key = deriveKey passwd salt
+        let hashedKey = tiger key
+
         file <- BS.readFile filePath
-        encrypted <- encryptIO key file
-        BS.writeFile (filePath ++ ".encrypted") encrypted
+        content <- encryptIO key file
+        let encryptedFile = toFile salt hashedKey content
+        
+        writeEncryptedFile (filePath ++ ".encrypted") encryptedFile
         removeFile filePath
+        renameFile (filePath ++ ".encrypted") filePath
+
     -- BS.writeFile (".config-" ++ filePath) key
 
-decryptFile key filePath =
-    if not (isEncrypted filePath) then printC $ "Ignoring " ++ filePath ++ ", it is not encrypted"
-    else do
-        printC $ "Decrypting " ++ cutEncrypted filePath
-        file <- BS.readFile filePath
-        decrypted <- decryptIO key file
-        BS.writeFile (cutEncrypted filePath) decrypted
-        -- removeFile (".config-" ++ filePath)
-        removeFile filePath
+decryptFile passwd filePath = do
+        printC $ "Decrypting " ++ filePath
+        encryptedFile <- readEncryptedFile filePath
+        let key = deriveKey passwd $ getSalt encryptedFile
+        passed <- safetyCheck (getHash encryptedFile) key filePath
+        if passed then do
+            decryptedContents <- decryptIO key $ getContent encryptedFile
+            BS.writeFile (filePath ++ ".decrypted") decryptedContents
+            removeFile filePath
+            renameFile (filePath ++ ".decrypted") filePath
+        else pure ()
 
-catFile key filePath = 
-    if not (isEncrypted filePath) then printC $ "Ignoring " ++ filePath ++ ", it is not encrypted"
-    else do
-        printC $ "Showing " ++  cutEncrypted filePath
-        file <- BS.readFile filePath
-        decrypted <- decryptIO key file
+catFile passwd filePath = do
+        printC $ "Showing " ++  filePath
+        encryptedFile <- readEncryptedFile filePath
+        let key = deriveKey passwd $ getSalt encryptedFile
+        decrypted <- decryptIO key $ getContent encryptedFile
         Data.ByteString.Char8.putStrLn decrypted
 
 
@@ -84,14 +100,28 @@ modeToOperation DECRYPT = decryptFile
 modeToOperation CAT = catFile
 
 
-getKey :: IO Key
-getKey = do
+getPassword :: IO Key
+getPassword = do
     printC "Please provide password:"
     hSetEcho stdin False
     password1 <- BS.getLine
     -- errorOn (BS.length key1 > 32) "Please provide key of length at most 32 characters"
     printC "Please provide password again"
     password2 <- BS.getLine
+    hSetEcho stdin True
     errorOn (password1 /= password2) "passwords differ"
-    printC "Deriving key"
-    return $ deriveKey password1
+    return password1
+
+generateSalt :: IO ByteString
+generateSalt = getRandomBytes 64
+
+
+safetyCheck :: ByteString -> ByteString -> String -> IO Bool
+safetyCheck hsh key filePath =
+    let hashedKey = tiger key in
+    if hashedKey == hsh then pure True else do
+        printC $ "Given password is wrong or file " ++ filePath ++ " has been modified"
+        printC $ "Are you sure you want to decrypt " ++ filePath ++ "? (y/N)"
+        response <- getLine
+        if response == "y" then pure True else 
+            (printC $ "Ignoring " ++ filePath) >> pure False

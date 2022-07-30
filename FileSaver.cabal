@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 executable FileSaver
   main-is:             Main.hs
-  other-modules:       Crypter, Util
+  other-modules:       Crypter, Util, Parser, EncryptedFile
   -- other-extensions:
   build-depends:       
     base >=4.12 && <4.13,
