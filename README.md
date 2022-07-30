@@ -13,3 +13,4 @@ Flags:
 ## Details
 Encrypting files using AES256 together with a key derivation function PBKDF2
 ## Example usage
+![Example usage](Demonstration/Example.png)
