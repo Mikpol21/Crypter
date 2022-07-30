@@ -10,3 +10,4 @@ Flags:
     -r -> work recursively on directories
     -h -> guide
 ```
+## Details
