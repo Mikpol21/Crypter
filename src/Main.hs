@@ -9,7 +9,8 @@ import qualified Data.ByteString as BS
 main :: IO ()
 main = do
     (files, mode) <- getFilesAndMode
-    passwd <- getPassword
-    displayWorkingFiles files
-    mapM_ (modeToOperation mode passwd) files 
-    printC "Done!"
+    if mode == HELP then help else do
+        displayWorkingFiles files
+        passwd <- getPassword
+        mapM_ (modeToOperation mode passwd) files 
+        printC "Done!"
