@@ -11,7 +11,6 @@ import Crypto.Hash
 import Crypto.Hash.Algorithms
 import Crypto.Cipher.Types (BlockCipher(..), Cipher(..), nullIV, KeySizeSpecifier(..), IV, makeIV)
 import Data.ByteArray (ByteArray)
-import qualified Crypto.Random.Types as CRT
 import qualified Data.ByteString as BS
 import Crypto.Data.Padding
 import Control.Arrow

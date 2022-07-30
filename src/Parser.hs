@@ -3,7 +3,7 @@
 module Parser where
 
 -- import Data.Word8(isDigit,isSpace,ord,chr)
-import Control.Applicative ( Alternative(..) )
+import Control.Applicative ( Alternative(..), liftA2 )
 import Control.Monad ( MonadPlus(..) )
 import qualified Data.ByteString as BS
 import Data.ByteString (ByteString)
@@ -17,7 +17,7 @@ runParser m s = case complete of
     x:xs -> fst x
     []   -> if not . Prelude.null $ res 
             then error "Parser did not consume entire stream."
-            else error "Parser error."
+            else error $ "Parser error:" ++ (show $ map snd res)
     where   res = parse (spaces >> m) s
             complete = Prelude.filter (BS.null . snd) res
 
@@ -105,6 +105,10 @@ word = token . fmap BS.pack . some . oneOf $ lowerCase `BS.append` upperCase `BS
 
 any :: Parser ByteString
 any = fmap BS.pack $ many char
+
+nBytes :: Int -> Parser ByteString
+nBytes 0 = return BS.empty
+nBytes n = liftA2 BS.cons char $ nBytes (n - 1)
 
 lowerCase :: ByteString 
 lowerCase = BS.pack $ map (toEnum . fromEnum) ['a' .. 'z']

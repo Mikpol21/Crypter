@@ -22,21 +22,21 @@ parseFile = do
 
 parseHeader :: Parser ByteString
 parseHeader = do
-    header <- Parser.any
+    header <- string defaultHeader
     string "\n"
     return header
 
 parseSalt :: Parser ByteString
 parseSalt = do
     string "salt: "
-    salt <- Parser.any
+    salt <- nBytes 64
     string "\n"
     return salt
 
 parseHash :: Parser ByteString
 parseHash = do
     string "hash: "
-    salt <- Parser.any
+    salt <- nBytes 24
     string "\n"
     return salt
 
@@ -59,7 +59,7 @@ defaultHeader = "[Crypter] This file has been encrypted\n[Crypter] Please do not
 toFile :: ByteString -> ByteString -> ByteString -> EncryptedFile
 toFile = EncryptedFile defaultHeader
 
-
+-- TODO handle parser error and report it to the user (not encrypted or parse error)
 readEncryptedFile :: FilePath -> IO EncryptedFile
 readEncryptedFile filePath = do
     file <- Data.ByteString.readFile filePath
